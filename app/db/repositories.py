@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 
 from app.db.models import Article, Digest, Source
 
+
 def get_or_create_source(
     session: Session,
     name: str,
@@ -22,6 +23,7 @@ def get_or_create_source(
         name=name,
         type=source_type,
         url=url,
+        fetch_method="rss",
     )
 
     session.add(source)
@@ -29,6 +31,7 @@ def get_or_create_source(
     session.refresh(source)
 
     return source
+
 
 def get_all_sources(
     session: Session,
@@ -40,7 +43,6 @@ def get_all_sources(
     return sources
 
 
-
 def get_article_by_url(
     session: Session,
     url: str,
@@ -49,7 +51,8 @@ def get_article_by_url(
 
     article = session.scalars(statement).first()
 
-    return article    
+    return article
+
 
 def get_articles_published_after(
     session: Session,
@@ -64,6 +67,7 @@ def get_articles_published_after(
     articles = session.scalars(statement).all()
 
     return articles
+
 
 def get_articles_without_content(
     session: Session,
@@ -80,6 +84,7 @@ def get_articles_without_content(
 
     return articles
 
+
 def get_articles_without_ai_summary(
     session: Session,
 ) -> list[Article]:
@@ -88,6 +93,7 @@ def get_articles_without_ai_summary(
     articles = session.scalars(statement).all()
 
     return articles
+
 
 def create_article(
     session: Session,
@@ -99,20 +105,21 @@ def create_article(
     content: str | None,
 ) -> Article:
     article = Article(
-    source_id=source_id,
-    title=title,
-    url=url,
-    published_at=published_at,
-    summary=summary,
-    content=content,
-    created_at=datetime.now(),
-)
+        source_id=source_id,
+        title=title,
+        url=url,
+        published_at=published_at,
+        summary=summary,
+        content=content,
+        created_at=datetime.now(),
+    )
 
     session.add(article)
     session.commit()
     session.refresh(article)
 
     return article
+
 
 def update_article_ai_summary(
     session: Session,
@@ -122,6 +129,7 @@ def update_article_ai_summary(
     article.ai_summary = ai_summary
 
     session.commit()
+
 
 def get_articles_without_ai_summary_after(
     session: Session,
@@ -140,6 +148,7 @@ def get_articles_without_ai_summary_after(
 
     return articles
 
+
 def create_digest(
     session: Session,
     digest_date: date,
@@ -157,6 +166,7 @@ def create_digest(
 
     return digest
 
+
 def get_digest_by_date(
     session: Session,
     digest_date: date,
@@ -170,6 +180,7 @@ def get_digest_by_date(
 
     return digest
 
+
 def get_latest_digest(
     session: Session,
 ) -> Digest | None:
@@ -181,6 +192,7 @@ def get_latest_digest(
     digest = session.scalars(statement).first()
 
     return digest
+
 
 def get_articles_without_content_after(
     session: Session,

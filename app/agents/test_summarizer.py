@@ -1,24 +1,39 @@
-from sqlalchemy.orm import Session
-
-from app.db.database import engine
-from app.db.repositories import get_articles_published_after
 from app.agents.summarizer import summarize_article
 
-from datetime import datetime
 
+def test_summarize_article(monkeypatch):
+    class FakeResponse:
+        output_text = "OpenAI released a new AI model. It matters because the model improves AI capabilities."
 
-cutoff = datetime(2026, 8, 18, 0, 0, 0)
+    class FakeClient:
+        class Responses:
+            def create(self, model, input):
+                return FakeResponse()
 
-with Session(engine) as session:
-    articles = get_articles_published_after(
-        session=session,
-        published_after=cutoff,
+        responses = Responses()
+
+    def fake_openai(api_key):
+        return FakeClient()
+
+    monkeypatch.setattr(
+        "app.agents.summarizer.OpenAI",
+        fake_openai,
     )
 
-    article = articles[0]
+    result = summarize_article(
+        "OpenAI released a new AI model that improves AI capabilities."
+    )
 
-    print("Title:")
-    print(article.title)
+    assert result == (
+        "OpenAI released a new AI model. "
+        "It matters because the model improves AI capabilities."
+    )
 
-    print("\nSummary:")
-    print(summarize_article(article.content))
+def test_summarize_article_requires_api_key(monkeypatch):
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+
+    try:
+        summarize_article("Test article content.")
+        assert False
+    except ValueError as error:
+        assert str(error) == "OPENAI_API_KEY not found"

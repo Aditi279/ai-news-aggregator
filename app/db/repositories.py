@@ -11,6 +11,7 @@ def get_or_create_source(
     name: str,
     source_type: str,
     url: str,
+    fetch_method: str = "rss",
 ) -> Source:
     statement = select(Source).where(Source.name == name)
 
@@ -23,7 +24,7 @@ def get_or_create_source(
         name=name,
         type=source_type,
         url=url,
-        fetch_method="rss",
+        fetch_method=fetch_method,
     )
 
     session.add(source)

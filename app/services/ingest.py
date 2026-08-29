@@ -30,11 +30,12 @@ def ingest_feed(
     print(f"Fetched {len(articles)} articles")
 
     source = get_or_create_source(
-        session=session,
-        name=source_name,
-        source_type=source_type,
-        url=feed_url,
-    )
+    session=session,
+    name=source_name,
+    source_type=source_type,
+    url=feed_url,
+    fetch_method=fetch_method,
+)
 
     new_articles = 0
 

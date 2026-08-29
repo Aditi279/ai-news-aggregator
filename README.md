@@ -9,9 +9,7 @@ The AI News Aggregator is a Python backend designed to automate the process of k
 The application currently collects news from:
 
 - OpenAI
-
 - Anthropic
-
 - Google AI
 
 Articles are stored in PostgreSQL, their full content is extracted when available, and OpenAI is used to generate concise summaries.
@@ -20,58 +18,53 @@ The application then combines the summarized articles into a daily AI news diges
 
 ## Features
 
+
+
 ### Article ingestion
 
 - Fetches articles from multiple configured sources.
-
 - Supports RSS-based and web-based fetching.
-
 - Prevents duplicate articles using the article URL.
-
 - Stores article metadata in PostgreSQL.
+
+
 
 ### Article content extraction
 
 - Fetches the full content of newly ingested articles.
-
 - Uses BeautifulSoup and HTTP requests for web content extraction.
-
 - Handles unavailable pages gracefully.
-
 - Permanently skips articles returning HTTP 404 responses.
-
 - Only attempts content extraction for articles discovered during the current ingestion run.
+
+
 
 ### AI summarization
 
 - Uses the OpenAI API to generate concise article summaries.
-
 - Stores generated summaries in PostgreSQL.
-
 - Generates summaries only when an article does not already have one.
+
+
 
 ### Daily AI digest
 
 - Selects articles published after the previous digest.
-
 - Combines their AI-generated summaries.
-
 - Uses an LLM to generate a concise daily digest.
-
 - Includes article titles, summaries, sources, and original URLs.
-
 - Stores generated digests in PostgreSQL.
-
 - Prevents duplicate digests for the same date.
+
+
 
 ### Safe daily execution
 
 The main application can be run with a single command:
 
 ```bash
-
 uv run python -m app.cli
-
+```
 
 The CLI:
 
@@ -129,7 +122,6 @@ Architecture
                   │   PostgreSQL    │
                   └─────────────────┘
 
-
 Project Structure
 
 ai-news-aggregator/
@@ -164,12 +156,15 @@ ai-news-aggregator/
 ├── docker/
 │   └── docker-compose.yml
 │
+├── tests/
+│   ├── conftest.py
+│   └── test_repositories.py
+│
 ├── .env
 ├── .gitignore
 ├── pyproject.toml
 ├── README.md
 └── uv.lock
-
 
 Tech Stack
 
@@ -183,6 +178,7 @@ Tech Stack
 * Pydantic
 * uv
 * Docker / Docker Compose
+* pytest
 
 Local Setup
 
@@ -202,17 +198,22 @@ docker compose -f docker/docker-compose.yml up -d
 4. Configure environment variables
 
 Create a .env file in the project root:
+
 OPENAI_API_KEY=your_openai_api_key
 DATABASE_URL=postgresql+psycopg://ai_news:ai_news_password@localhost:5432/ai_news
+
 Never commit .env or API keys to GitHub.
 
 5. Create database tables
 
 Run the project’s database table creation script:
+
 uv run python -m app.db.create_tables
 
 6. Run the aggregator
+
 uv run python -m app.cli
+
 The application will fetch new articles, extract content, generate missing summaries, and create the daily digest.
 
 Running the Pipeline Manually
@@ -231,6 +232,7 @@ Optional Automation
 The project is designed so that the same CLI command can later be triggered by a scheduler.
 
 The scheduler does not contain the application logic. It simply executes:
+
 uv run python -m app.cli
 
 This makes scheduled execution optional while keeping the core application independently usable.
@@ -313,6 +315,28 @@ Generate daily digest
       ▼
 Save digest to PostgreSQL
 
+Testing
+
+The project includes an automated pytest test suite covering:
+
+* Repository operations
+* Article creation
+* Article content fetching
+* HTTP 404 handling
+* AI summary generation
+* Summary failure handling
+* Daily digest generation
+* Duplicate digest protection
+* Empty article handling
+* CLI orchestration
+* OpenAI API key validation
+
+Run the complete test suite with:
+
+uv run pytest
+
+The current test suite contains 19 tests.
+
 Current Status
 
 The core backend pipeline is implemented and tested end-to-end.
@@ -331,6 +355,8 @@ Completed:
 * Digest persistence
 * Duplicate-digest protection
 * Single-command application workflow
+* Automated test suite
+* Separate test database
 * Optional automation architecture
 
 Future Improvements
@@ -345,7 +371,6 @@ Planned improvements include:
 * Automated scheduled deployment
 * Cloud deployment
 * Improved monitoring and logging
-* Automated test suite
 * User-specific digest preferences
 
 Project Goal

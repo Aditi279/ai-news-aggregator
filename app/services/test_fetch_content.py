@@ -1,17 +1,18 @@
 from datetime import datetime, timedelta, timezone
+
 import requests
 from sqlalchemy.orm import Session
 
 from app.db.models import Base
 from app.db.repositories import create_article, get_or_create_source
 from app.services.fetch_content import fetch_missing_content
-from app.db.database import engine
+from tests.conftest import test_engine
 
 
 def test_fetch_missing_content(monkeypatch):
-    Base.metadata.create_all(engine)
+    Base.metadata.create_all(test_engine)
 
-    with Session(engine) as session:
+    with Session(test_engine) as session:
         source = get_or_create_source(
             session=session,
             name="Test Content Source",
@@ -51,9 +52,9 @@ def test_fetch_missing_content(monkeypatch):
 
 
 def test_fetch_missing_content_marks_404_as_failed(monkeypatch):
-    Base.metadata.create_all(engine)
+    Base.metadata.create_all(test_engine)
 
-    with Session(engine) as session:
+    with Session(test_engine) as session:
         source = get_or_create_source(
             session=session,
             name="Test 404 Source",
@@ -97,4 +98,4 @@ def test_fetch_missing_content_marks_404_as_failed(monkeypatch):
 
         assert updated_articles == 0
         assert article.content is None
-        assert article.content_fetch_failed is True        
+        assert article.content_fetch_failed is True

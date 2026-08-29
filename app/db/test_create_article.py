@@ -2,15 +2,25 @@ from datetime import datetime, timezone
 
 from sqlalchemy.orm import Session
 
-from app.db.database import engine
-from app.db.repositories import create_article
+from app.db.models import Base
+from app.db.repositories import create_article, get_or_create_source
+from tests.conftest import test_engine
 
 
 def test_create_article():
-    with Session(engine) as session:
+    Base.metadata.create_all(test_engine)
+
+    with Session(test_engine) as session:
+        source = get_or_create_source(
+            session=session,
+            name="Test Article Source",
+            source_type="blog",
+            url="https://example.com",
+        )
+
         article = create_article(
             session=session,
-            source_id=1,
+            source_id=source.id,
             title="Test article for repository",
             url="https://example.com/test-article-repository",
             published_at=datetime.now(timezone.utc),

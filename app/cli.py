@@ -1,3 +1,4 @@
+import logging
 from datetime import date, datetime
 
 from sqlalchemy.orm import Session
@@ -7,6 +8,14 @@ from app.db.repositories import get_all_sources, get_latest_digest
 from app.services.daily_digest import create_daily_digest
 from app.services.fetch_content import fetch_missing_content
 from app.services.ingest import ingest_feed
+
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s",
+)
+
+logger = logging.getLogger(__name__)
 
 
 def run_ingestion(session: Session) -> int:
@@ -24,16 +33,27 @@ def run_ingestion(session: Session) -> int:
                 fetch_method=source.fetch_method,
             )
         except Exception as error:
-            print(f"{source.name} → Ingestion failed: {error}")
+            logger.error(
+                "%s → Ingestion failed: %s",
+                source.name,
+                error,
+            )
             continue
 
-        print(f"{source.name} → New articles inserted: {new_articles}")
+        logger.info(
+            "%s → New articles inserted: %s",
+            source.name,
+            new_articles,
+        )
         total_new_articles += new_articles
 
     return total_new_articles
 
 
-def run_content_fetching(session: Session, created_after: datetime) -> int:
+def run_content_fetching(
+    session: Session,
+    created_after: datetime,
+) -> int:
     total_fetched = 0
 
     while True:
@@ -58,7 +78,10 @@ def run_daily_digest():
         latest_digest = get_latest_digest(session)
 
         if latest_digest and latest_digest.digest_date == digest_date:
-            print(f"Digest already exists for {digest_date}")
+            logger.info(
+                "Digest already exists for %s",
+                digest_date,
+            )
             return
 
         if latest_digest:
@@ -71,22 +94,28 @@ def run_daily_digest():
 
         ingestion_started_at = datetime.now()
 
-        print("Starting article ingestion...")
+        logger.info("Starting article ingestion...")
 
         new_articles = run_ingestion(session)
 
-        print(f"Total new articles: {new_articles}")
+        logger.info(
+            "Total new articles: %s",
+            new_articles,
+        )
 
-        print("Fetching article content...")
+        logger.info("Fetching article content...")
 
         content_fetched = run_content_fetching(
             session=session,
             created_after=ingestion_started_at,
         )
 
-        print(f"Total article contents fetched: {content_fetched}")
+        logger.info(
+            "Total article contents fetched: %s",
+            content_fetched,
+        )
 
-        print("Generating daily digest...")
+        logger.info("Generating daily digest...")
 
         create_daily_digest(
             session=session,

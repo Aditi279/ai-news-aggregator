@@ -1,14 +1,18 @@
+import logging
 from datetime import datetime
 from email.utils import parsedate_to_datetime
 
 from sqlalchemy.orm import Session
 
 from app.db.repositories import (
-    get_or_create_source,
-    get_article_by_url,
     create_article,
+    get_article_by_url,
+    get_or_create_source,
 )
 from app.fetchers.router import fetch_articles
+
+
+logger = logging.getLogger(__name__)
 
 
 def parse_published_date(value):
@@ -27,15 +31,19 @@ def ingest_feed(
 ) -> int:
     articles = fetch_articles(feed_url, fetch_method)
 
-    print(f"Fetched {len(articles)} articles")
+    logger.info(
+        "%s → Fetched %s articles",
+        source_name,
+        len(articles),
+    )
 
     source = get_or_create_source(
-    session=session,
-    name=source_name,
-    source_type=source_type,
-    url=feed_url,
-    fetch_method=fetch_method,
-)
+        session=session,
+        name=source_name,
+        source_type=source_type,
+        url=feed_url,
+        fetch_method=fetch_method,
+    )
 
     new_articles = 0
 
@@ -47,7 +55,7 @@ def ingest_feed(
 
         if existing_article:
             continue
-        
+
         create_article(
             session=session,
             source_id=source.id,

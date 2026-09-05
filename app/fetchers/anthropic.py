@@ -1,8 +1,12 @@
+import logging
 import requests
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin
 
 from app.models import Article
+
+
+logger = logging.getLogger(__name__)
 
 
 def fetch_anthropic(url):
@@ -33,7 +37,11 @@ def fetch_anthropic(url):
             article_response = requests.get(article_url)
             article_response.raise_for_status()
         except requests.RequestException as error:
-            print(f"Failed to fetch article {article_url}: {error}")
+            logger.error(
+                "Failed to fetch article %s: %s",
+                article_url,
+                error,
+            )
             continue
 
         article_soup = BeautifulSoup(article_response.text, "html.parser")

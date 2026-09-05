@@ -1,12 +1,16 @@
+import logging
 from datetime import datetime
 
 from sqlalchemy.orm import Session
 
+from app.agents.summarizer import summarize_article
 from app.db.repositories import (
     get_articles_without_ai_summary_after,
     update_article_ai_summary,
 )
-from app.agents.summarizer import summarize_article
+
+
+logger = logging.getLogger(__name__)
 
 
 def generate_missing_summaries(
@@ -34,9 +38,10 @@ def generate_missing_summaries(
             updated_articles += 1
 
         except Exception as error:
-            print(
-                f"Failed to summarize "
-                f"{article.url}: {error}"
+            logger.error(
+                "Failed to summarize %s: %s",
+                article.url,
+                error,
             )
 
     return updated_articles

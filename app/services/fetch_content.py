@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime
 
 import requests
@@ -5,6 +6,9 @@ from sqlalchemy.orm import Session
 
 from app.db.repositories import get_articles_without_content_after
 from app.fetchers.content import fetch_article_content
+
+
+logger = logging.getLogger(__name__)
 
 
 def fetch_missing_content(
@@ -22,9 +26,7 @@ def fetch_missing_content(
     for article in articles:
         try:
             content = fetch_article_content(article.url)
-
             article.content = content
-
             updated_articles += 1
 
         except requests.HTTPError as error:
@@ -34,20 +36,22 @@ def fetch_missing_content(
             ):
                 article.content_fetch_failed = True
 
-                print(
-                    f"Skipping permanently unavailable article: "
-                    f"{article.url}"
+                logger.warning(
+                    "Skipping permanently unavailable article: %s",
+                    article.url,
                 )
             else:
-                print(
-                    f"Failed to fetch content for "
-                    f"{article.url}: {error}"
+                logger.error(
+                    "Failed to fetch content for %s: %s",
+                    article.url,
+                    error,
                 )
 
         except Exception as error:
-            print(
-                f"Failed to fetch content for "
-                f"{article.url}: {error}"
+            logger.error(
+                "Failed to fetch content for %s: %s",
+                article.url,
+                error,
             )
 
     session.commit()

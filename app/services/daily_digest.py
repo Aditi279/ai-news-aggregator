@@ -1,3 +1,4 @@
+import logging
 from datetime import date, datetime
 
 from sqlalchemy.orm import Session
@@ -9,6 +10,9 @@ from app.db.repositories import (
     get_digest_by_date,
 )
 from app.services.generate_summary import generate_missing_summaries
+
+
+logger = logging.getLogger(__name__)
 
 
 def create_daily_digest(
@@ -23,8 +27,9 @@ def create_daily_digest(
     )
 
     if existing_digest:
-        print(
-            f"Digest already exists for {digest_date}"
+        logger.info(
+            "Digest already exists for %s",
+            digest_date,
         )
         return None
 
@@ -34,7 +39,7 @@ def create_daily_digest(
     )
 
     if not articles:
-        print("No new articles found")
+        logger.info("No new articles found")
         return None
 
     articles_needing_summaries = [
@@ -64,7 +69,7 @@ def create_daily_digest(
     ]
 
     if not articles:
-        print("No summarized articles available")
+        logger.info("No summarized articles available")
         return None
 
     digest_content = generate_digest(articles)
@@ -75,6 +80,9 @@ def create_daily_digest(
         content=digest_content,
     )
 
-    print(f"Digest created with ID: {digest.id}")
+    logger.info(
+        "Digest created with ID: %s",
+        digest.id,
+    )
 
     return digest.id

@@ -99,3 +99,53 @@ def test_fetch_missing_content_marks_404_as_failed(monkeypatch):
         assert updated_articles == 0
         assert article.content is None
         assert article.content_fetch_failed is True
+
+
+def test_fetch_missing_content_retries_temporary_failure(monkeypatch):
+    Base.metadata.create_all(test_engine)
+
+    with Session(test_engine) as session:
+        source = get_or_create_source(
+            session=session,
+            name="Test Temporary Failure Source",
+            source_type="blog",
+            url="https://example.com",
+        )
+
+        article = create_article(
+            session=session,
+            source_id=source.id,
+            title="Test temporary failure article",
+            url="https://example.com/temporary-failure",
+            published_at=datetime.now(timezone.utc),
+            summary="Test summary",
+            content=None,
+        )
+
+        def fake_fetch_article_content(url):
+            response = requests.Response()
+            response.status_code = 500
+            response.url = url
+
+            raise requests.HTTPError(
+                "500 Internal Server Error",
+                response=response,
+            )
+
+        monkeypatch.setattr(
+            "app.services.fetch_content.fetch_article_content",
+            fake_fetch_article_content,
+        )
+
+        created_after = article.created_at - timedelta(seconds=1)
+
+        updated_articles = fetch_missing_content(
+            session=session,
+            created_after=created_after,
+        )
+
+        session.refresh(article)
+
+        assert updated_articles == 0
+        assert article.content is None
+        assert article.content_fetch_failed is False

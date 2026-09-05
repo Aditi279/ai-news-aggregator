@@ -3,10 +3,7 @@ from datetime import date, datetime
 from sqlalchemy.orm import Session
 
 from app.db.database import engine
-from app.db.repositories import (
-    get_all_sources,
-    get_latest_digest,
-)
+from app.db.repositories import get_all_sources, get_latest_digest
 from app.services.daily_digest import create_daily_digest
 from app.services.fetch_content import fetch_missing_content
 from app.services.ingest import ingest_feed
@@ -18,28 +15,25 @@ def run_ingestion(session: Session) -> int:
     sources = get_all_sources(session)
 
     for source in sources:
-        new_articles = ingest_feed(
-            session=session,
-            feed_url=source.url,
-            source_name=source.name,
-            source_type=source.type,
-            fetch_method=source.fetch_method,
-        )
+        try:
+            new_articles = ingest_feed(
+                session=session,
+                feed_url=source.url,
+                source_name=source.name,
+                source_type=source.type,
+                fetch_method=source.fetch_method,
+            )
+        except Exception as error:
+            print(f"{source.name} → Ingestion failed: {error}")
+            continue
 
-        print(
-            f"{source.name} → "
-            f"New articles inserted: {new_articles}"
-        )
-
+        print(f"{source.name} → New articles inserted: {new_articles}")
         total_new_articles += new_articles
 
     return total_new_articles
 
 
-def run_content_fetching(
-    session: Session,
-    created_after: datetime,
-) -> int:
+def run_content_fetching(session: Session, created_after: datetime) -> int:
     total_fetched = 0
 
     while True:
@@ -64,9 +58,7 @@ def run_daily_digest():
         latest_digest = get_latest_digest(session)
 
         if latest_digest and latest_digest.digest_date == digest_date:
-            print(
-                f"Digest already exists for {digest_date}"
-            )
+            print(f"Digest already exists for {digest_date}")
             return
 
         if latest_digest:
@@ -83,9 +75,7 @@ def run_daily_digest():
 
         new_articles = run_ingestion(session)
 
-        print(
-            f"Total new articles: {new_articles}"
-        )
+        print(f"Total new articles: {new_articles}")
 
         print("Fetching article content...")
 
@@ -94,10 +84,7 @@ def run_daily_digest():
             created_after=ingestion_started_at,
         )
 
-        print(
-            f"Total article contents fetched: "
-            f"{content_fetched}"
-        )
+        print(f"Total article contents fetched: {content_fetched}")
 
         print("Generating daily digest...")
 

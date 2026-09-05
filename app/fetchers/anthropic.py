@@ -29,13 +29,14 @@ def fetch_anthropic(url):
 
         published = link.find("time")
 
-        article_response = requests.get(article_url)
-        article_response.raise_for_status()
+        try:
+            article_response = requests.get(article_url)
+            article_response.raise_for_status()
+        except requests.RequestException as error:
+            print(f"Failed to fetch article {article_url}: {error}")
+            continue
 
-        article_soup = BeautifulSoup(
-            article_response.text,
-            "html.parser",
-        )
+        article_soup = BeautifulSoup(article_response.text, "html.parser")
 
         title = article_soup.find("h1")
         summary = title.find_next("p") if title else None

@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from app.db.models import Base
 from app.db.repositories import get_or_create_source
-from app.cli import run_daily_digest
+from app.cli import run_daily_digest, run_ingestion
 
 
 def test_run_daily_digest(monkeypatch):
@@ -63,3 +63,44 @@ def test_run_daily_digest(monkeypatch):
         )
 
     run_daily_digest()
+
+
+def test_run_ingestion_continues_when_source_fails(monkeypatch):
+    test_engine = create_engine("sqlite:///:memory:")
+    Base.metadata.create_all(test_engine)
+
+    with Session(test_engine) as session:
+        get_or_create_source(
+            session=session,
+            name="Working Source",
+            source_type="blog",
+            url="https://working.example.com",
+        )
+
+        get_or_create_source(
+            session=session,
+            name="Failing Source",
+            source_type="blog",
+            url="https://failing.example.com",
+        )
+
+        def fake_ingest_feed(
+            session,
+            feed_url,
+            source_name,
+            source_type,
+            fetch_method,
+        ):
+            if source_name == "Failing Source":
+                raise Exception("Source failed")
+
+            return 5
+
+        monkeypatch.setattr(
+            "app.cli.ingest_feed",
+            fake_ingest_feed,
+        )
+
+        total = run_ingestion(session)
+
+    assert total == 5

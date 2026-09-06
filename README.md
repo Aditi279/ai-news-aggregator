@@ -18,7 +18,7 @@ The application then combines the summarized articles into a daily AI news diges
 
 ## Architecture
 
-AI News Aggregator Architecture
+![AI News Aggregator Architecture](docs/architecture.png)
 
 ## Features
 

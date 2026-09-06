@@ -18,43 +18,7 @@ The application then combines the summarized articles into a daily AI news diges
 
 ## Architecture
 
-```
-News Sources
-    |
-    +-- OpenAI
-    +-- Anthropic
-    +-- Google AI
-    |
-    v
-Fetchers
-    |
-    +-- RSS
-    +-- Web
-    |
-    v
-PostgreSQL / Supabase
-    |
-    +-- Sources
-    +-- Articles
-    +-- Digests
-    |
-    v
-Content Fetcher
-    |
-    v
-OpenAI API
-    |
-    +-- Article summaries
-    +-- Daily digest
-    |
-    v
-Daily AI News Digest
-    |
-    v
-Stored in PostgreSQL
-```
-
-
+AI News Aggregator Architecture
 
 ## Features
 
